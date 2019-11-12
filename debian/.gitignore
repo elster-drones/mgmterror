@@ -1,0 +1,6 @@
+debhelper-build-stamp
+golang-vyatta-mgmterror-dev/
+*.debhelper.*
+*.substvars
+tmp/
+files

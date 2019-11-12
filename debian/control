@@ -1,0 +1,23 @@
+Source: golang-github-danos-mgmterror
+Section: admin
+Priority: optional
+Maintainer: Vyatta Package Maintainers <DL-vyatta-help@att.com>
+Build-Depends:
+ debhelper (>= 9),
+ dh-golang,
+ golang-github-danos-utils-natsort-dev,
+ golang-github-danos-utils-pathutil-dev,
+ golang-github-kr-pretty-dev | golang-pretty-dev,
+ golang-go (>= 2:1.4)
+Standards-Version: 3.9.8
+
+Package: golang-github-danos-mgmterror-dev
+Architecture: all
+Depends:
+ golang-github-danos-utils-natsort-dev,
+ golang-github-danos-utils-pathutil-dev,
+ golang-github-kr-pretty-dev | golang-pretty-dev,
+ ${misc:Depends}
+Built-Using: ${misc:Built-Using}
+Description: Vyatta Component Infrastructure Development
+ Development files for integrating with the Vyatta Component Infrastructure
