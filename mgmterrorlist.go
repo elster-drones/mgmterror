@@ -23,6 +23,12 @@ func mkMgmtError(e error) error {
 	switch e.(type) {
 	case json.Marshaler, xml.Marshaler:
 		return e
+	case Formattable:
+		me, _ := e.(Formattable)
+		err := NewOperationFailedApplicationError()
+		err.Message = me.GetMessage()
+		err.Path = me.GetPath()
+		return err
 	default:
 		err := NewOperationFailedApplicationError()
 		err.Message = e.Error()
