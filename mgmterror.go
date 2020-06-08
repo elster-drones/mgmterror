@@ -299,6 +299,7 @@ type Formattable interface {
 	GetPath() string
 	GetSeverity() string
 	GetTag() string
+	GetAppTag() string
 	GetType() string
 	GetInfo() MgmtErrorInfo
 }
@@ -310,6 +311,7 @@ func (me *MgmtError) GetMessage() string     { return me.Message }
 func (me *MgmtError) GetPath() string        { return me.Path }
 func (me *MgmtError) GetSeverity() string    { return me.Severity }
 func (me *MgmtError) GetTag() string         { return me.Tag }
+func (me *MgmtError) GetAppTag() string      { return me.AppTag }
 func (me *MgmtError) GetType() string        { return me.Typ }
 func (me *MgmtError) GetInfo() MgmtErrorInfo { return me.Info }
 
