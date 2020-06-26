@@ -1,4 +1,5 @@
-// Copyright (c) 2017,2019, AT&T Intellectual Property. All rights reserved.
+// Copyright (c) 2017,2019-2020, AT&T Intellectual Property.
+// All rights reserved.
 //
 // Copyright (c) 2016-2017 by Brocade Communications Systems, Inc.
 // All rights reserved.
@@ -285,6 +286,18 @@ func newMgmtError() *MgmtError {
 	e.setXMLName()
 	return e
 }
+
+// MgmtErrorRef - interface that allows us to identify all types of MgmtError
+// in a single check.  Use of private function (mgmtErrorRef) ensures no one
+// else can create an object that meets the interface unless it explicitly
+// includes a MgmtError object, in which case that's ok.
+type MgmtErrorRef interface {
+	mgmtErrorRef()
+}
+
+var _ MgmtErrorRef = (*MgmtError)(nil)
+
+func (me *MgmtError) mgmtErrorRef() {}
 
 // Formattable - interface provided by error types to allow formatting
 // (NB: MgmtError is just one example of such a type.)
