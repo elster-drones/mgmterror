@@ -1,4 +1,5 @@
-// Copyright (c) 2017,2019, AT&T Intellectual Property. All rights reserved
+// Copyright (c) 2017,2019-2020, AT&T Intellectual Property.
+// All rights reserved.
 //
 // Copyright (c) 2017 by Brocade Communications Systems, Inc.
 // All rights reserved.
@@ -16,6 +17,8 @@ import (
 type MgmtErrorList struct {
 	errs []error
 }
+
+func (e MgmtErrorList) Errors() []error { return e.errs }
 
 // Make sure the error has either a JSON or XML Marshaler.  If not,
 // convert the "error" to a standard error.
