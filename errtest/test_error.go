@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019, AT&T Intellectual Property. All rights reserved.
+// Copyright (c) 2017-2020, AT&T Intellectual Property. All rights reserved.
 //
 // SPDX-License-Identifier: MPL-2.0
 //
@@ -16,18 +16,115 @@ import (
 	"github.com/danos/mgmterror"
 )
 
+const (
+	noPath = ""
+	noInfo = ""
+)
+
 type ExpMgmtError struct {
+	nameForDebug string
+	// These fields will always be matched, even if empty
 	expMsgContents []string
 	expPath        string
 	expInfo        string
+	// These fields will be ignored if empty.  Typically of less interest,
+	// with default settings.
+	expType     string
+	expSeverity string
+	expTag      string
+	expAppTag   string
 }
 
-func NewExpMgmtError(msgs []string, path, info string) *ExpMgmtError {
+// Original constructor, sets Msg, Path and Info only.
+func NewExpMgmtError(
+	msgs []string,
+	path, info string,
+) *ExpMgmtError {
+
 	return &ExpMgmtError{
+		nameForDebug:   "Unspecified Error",
 		expMsgContents: msgs, // Actual error should contain all these.
 		expPath:        path, // Absolute match
 		expInfo:        info, // May be empty
 	}
+}
+
+func (eme *ExpMgmtError) SetName(name string) *ExpMgmtError {
+	eme.nameForDebug = name
+	return eme
+}
+
+func (eme *ExpMgmtError) SetType(typ string) *ExpMgmtError {
+	eme.expType = typ
+	return eme
+}
+
+func (eme *ExpMgmtError) SetTag(tag string) *ExpMgmtError {
+	eme.expTag = tag
+	return eme
+}
+
+func (eme *ExpMgmtError) SetAppTag(appTag string) *ExpMgmtError {
+	eme.expAppTag = appTag
+	return eme
+}
+
+func (eme *ExpMgmtError) SetSeverity(sev string) *ExpMgmtError {
+	eme.expSeverity = sev
+	return eme
+}
+
+// Constructors for some common errors.  Avoids repetition of common fields
+// and allows for these to be modified in one place if needed.
+
+// leafrefPath: space separated, no []
+// nodeWithErrorPath: / separated, with leading /
+func LeafrefMgmtErr(leafrefPath, nodeWithErrorPath string) *ExpMgmtError {
+	return NewExpMgmtError(
+		[]string{
+			"The following path must exist:",
+			fmt.Sprintf("[%s]", leafrefPath)},
+		nodeWithErrorPath,
+		noInfo).
+		SetName("Non-existent Leafref").
+		SetType("application").
+		SetTag("operation-failed")
+}
+
+func MissingMandatoryNodeMgmtErr(missingNode, path string) *ExpMgmtError {
+	return NewExpMgmtError(
+		[]string{fmt.Sprintf("Missing mandatory node %s", missingNode)},
+		path,
+		noInfo).
+		SetName("Missing Mandatory Node").
+		SetType("application").
+		SetTag("operation-failed")
+}
+
+func MustViolationMgmtErr(errmsg, path string) *ExpMgmtError {
+	return NewExpMgmtError(
+		[]string{errmsg},
+		path,
+		noInfo).
+		SetName("Must Violation").
+		SetType("application").
+		SetTag("operation-failed")
+}
+
+func UniqueViolationMgmtErr(
+	nonUniquePath, commonKeys, path string,
+) *ExpMgmtError {
+	return NewExpMgmtError(
+		[]string{
+			"The following path must be unique",
+			fmt.Sprintf("[%s]", nonUniquePath),
+			"but is defined in the following set of keys:",
+			fmt.Sprintf("[%s]", commonKeys)},
+		path,
+		noInfo).
+		SetName("Unique Violation").
+		SetType("application").
+		SetTag("operation-failed")
 }
 
 // Rough and ready check that all parts of all warnings appear at some point
@@ -55,6 +152,37 @@ func CheckMgmtErrorsInLog(
 	}
 }
 
+func setAndNoMatch(exp, act string) bool {
+	return exp != "" && exp != act
+}
+
+func (eme *ExpMgmtError) Matches(actualErr mgmterror.Formattable) bool {
+	if actualErr.GetPath() != eme.expPath {
+		return false
+	}
+	if !checkInfoMatchesNonFatal(actualErr, eme.expInfo) {
+		return false
+	}
+	for _, expMsg := range eme.expMsgContents {
+		if !strings.Contains(actualErr.GetMessage(), expMsg) {
+			return false
+		}
+	}
+	if setAndNoMatch(eme.expType, actualErr.GetType()) {
+		return false
+	}
+	if setAndNoMatch(eme.expAppTag, actualErr.GetAppTag()) {
+		return false
+	}
+	if setAndNoMatch(eme.expTag, actualErr.GetTag()) {
+		return false
+	}
+	if setAndNoMatch(eme.expSeverity, actualErr.GetSeverity()) {
+		return false
+	}
+	return true
+}
+
 func CheckMgmtErrors(
 	t *testing.T,
 	expMgmtErrs []*ExpMgmtError,
@@ -67,18 +195,9 @@ func CheckMgmtErrors(
 		me, _ := actErr.(mgmterror.Formattable)
 
 		found := false
-	loop1:
 		for _, expErr := range expMgmtErrs {
-			if me.GetPath() != expErr.expPath {
+			if !expErr.Matches(me) {
 				continue
-			}
-			if !checkInfoMatchesNonFatal(me, expErr.expInfo) {
-				continue
-			}
-			for _, expMsg := range expErr.expMsgContents {
-				if !strings.Contains(me.GetMessage(), expMsg) {
-					continue loop1
-				}
 			}
 			found = true
 			break
@@ -86,8 +205,13 @@ func CheckMgmtErrors(
 		if !found {
 			t.Logf("Expecting: %v\n", expMgmtErrs[0])
 			t.Fatalf(
-				"Found unexpected error:\n\tPath:\t%s\n\tMsg:\t%s\nInfo:\t%s\n",
-				me.GetPath(), me.GetMessage(), me.GetInfo())
+				"Found unexpected error:\n"+
+					"\tPath:\t%s\n\tMsg:\t%s\n\tTag:\t%s\n"+
+					"\tType:\t%s\n\tSev:\t%s\n\tAppTag:\t%s\n"+
+					"\tInfo:\t%s\n",
+				me.GetPath(), me.GetMessage(), me.GetTag(),
+				me.GetType(), me.GetSeverity(), me.GetAppTag(),
+				me.GetInfo())
 			return
 		}
 	}
@@ -95,19 +219,10 @@ func CheckMgmtErrors(
 	// Now check all expected errors were seen.
 	for _, expErr := range expMgmtErrs {
 		found := false
-	loop2:
 		for _, actErr := range actualErrs {
 			me, _ := actErr.(mgmterror.Formattable)
-			if me.GetPath() != expErr.expPath {
+			if !expErr.Matches(me) {
 				continue
-			}
-			if !checkInfoMatchesNonFatal(me, expErr.expInfo) {
-				continue
-			}
-			for _, expMsg := range expErr.expMsgContents {
-				if !strings.Contains(me.GetMessage(), expMsg) {
-					continue loop2
-				}
 			}
 			found = true
 			break
