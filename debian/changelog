@@ -1,3 +1,12 @@
+golang-github-danos-mgmterror (1:1.5) unstable; urgency=medium
+
+  * Add AppTag() to Formattable interface
+  * Add IsMgmtErrorRef interface
+  * Add mgmterrorlist accessor
+  * Extend ExpMgmtError.
+
+ -- William Ivory <william.ivory@intl.att.com>  Fri, 25 Sep 2020 08:47:21 +0100
+
 golang-github-danos-mgmterror (1:1.4) unstable; urgency=medium
 
   * DANOS Import Master
