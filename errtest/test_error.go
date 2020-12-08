@@ -18,15 +18,16 @@ import (
 
 const (
 	noPath = ""
-	noInfo = ""
 )
+
+var noInfo = []*mgmterror.MgmtErrorInfoTag{}
 
 type ExpMgmtError struct {
 	nameForDebug string
 	// These fields will always be matched, even if empty
 	expMsgContents []string
 	expPath        string
-	expInfo        string
+	expInfo        []*mgmterror.MgmtErrorInfoTag
 	// These fields will be ignored if empty.  Typically of less interest,
 	// with default settings.
 	expType     string
@@ -38,7 +39,8 @@ type ExpMgmtError struct {
 // Original constructor, sets Msg, Path and Info only.
 func NewExpMgmtError(
 	msgs []string,
-	path, info string,
+	path string,
+	info []*mgmterror.MgmtErrorInfoTag,
 ) *ExpMgmtError {
 
 	return &ExpMgmtError{
@@ -145,8 +147,19 @@ func CheckMgmtErrorsInLog(
 			}
 		}
 		if len(expWarn.expInfo) > 0 {
-			if !strings.Contains(logStr, expWarn.expInfo) {
-				t.Fatalf("Syslog doesn't contain info %s\n", expWarn.expInfo)
+			for _, info := range expWarn.expInfo {
+				if !strings.Contains(logStr, info.XMLName.Space) {
+					t.Fatalf("Syslog doesn't contain info space %s\n",
+						info.XMLName.Space)
+				}
+				if !strings.Contains(logStr, info.XMLName.Local) {
+					t.Fatalf("Syslog doesn't contain info local %s\n",
+						info.XMLName.Local)
+				}
+				if !strings.Contains(logStr, info.Value) {
+					t.Fatalf("Syslog doesn't contain info value %s\n",
+						info.Value)
+				}
 			}
 		}
 	}
@@ -203,7 +216,16 @@ func CheckMgmtErrors(
 			break
 		}
 		if !found {
-			t.Logf("Expecting: %v\n", expMgmtErrs[0])
+			expErr := expMgmtErrs[0]
+			t.Logf("Expecting:\n"+
+				"\tPath:\t%s\n\tMsg:\t%s\n\tTag:\t%s\n"+
+				"\tType:\t%s\n\tSev:\t%s\n\tAppTag:\t%s\n",
+				expErr.expPath, expErr.expMsgContents, expErr.expTag,
+				expErr.expType, expErr.expSeverity, expErr.expAppTag)
+			for _, info := range expErr.expInfo {
+				t.Logf("\tInfo: NS %s:%s, Value %s\n",
+					info.XMLName.Space, info.XMLName.Local, info.Value)
+			}
 			t.Fatalf(
 				"Found unexpected error:\n"+
 					"\tPath:\t%s\n\tMsg:\t%s\n\tTag:\t%s\n"+
@@ -288,15 +310,33 @@ func CheckInfo(t *testing.T, err error, expInfoVal string) {
 	}
 }
 
-func checkInfoMatchesNonFatal(me mgmterror.Formattable, expInfoVal string) bool {
-	if len(me.GetInfo()) == 0 {
-		// If nothing expected, nothing seen, return ok, otherwise error
-		return expInfoVal == ""
-	}
-
-	if me.GetInfo()[0].Value != expInfoVal {
+func checkInfoMatchesNonFatal(
+	me mgmterror.Formattable,
+	expInfo []*mgmterror.MgmtErrorInfoTag,
+) bool {
+	if len(expInfo) != len(me.GetInfo()) {
 		return false
 	}
+
+	for _, expInfoTag := range expInfo {
+		found := false
+		for _, actInfoTag := range me.GetInfo() {
+			if expInfoTag.XMLName.Space != actInfoTag.XMLName.Space {
+				break
+			}
+			if expInfoTag.XMLName.Local != actInfoTag.XMLName.Local {
+				break
+			}
+			if expInfoTag.Value != actInfoTag.Value {
+				break
+			}
+			found = true
+		}
+		if !found {
+			return false
+		}
+	}
+
 	return true
 }
 
