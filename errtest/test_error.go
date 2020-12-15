@@ -464,6 +464,24 @@ func NewInvalidNodeError(
 	}
 }
 
+// This is a bit of a special case, as this error is really meant for internal
+// debug purposes if we get a prefix that doesn't match the command presented
+// to cfgcli with it.  So, <setMsg> is a bit of a hack to let the test work.
+func NewInvalidPrefixError(
+	t *testing.T,
+	path, prefix string,
+) *TestError {
+	return &TestError{
+		t:         t,
+		path:      path,
+		rawMsgs:   []string{"An unexpected element is present"},
+		cliMsgs:   []string{"Configuration path", "is not valid"},
+		rpcMsgs:   []string{"is not valid"},
+		setMsg:    "has invalid prefix",
+		setSuffix: fmt.Sprintf("has invalid prefix '%s'", prefix),
+	}
+}
+
 func NewInvalidNumElementsError(
 	t *testing.T,
 	path string,
