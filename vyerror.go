@@ -174,7 +174,7 @@ func (e *PathAmbiguousError) MarshalXML(enc *xml.Encoder, start xml.StartElement
 
 func (e *PathAmbiguousError) GetMessage() string {
 	var b bytes.Buffer
-	b.WriteString(errpath(pathutil.Makepath(e.Path)))
+	b.WriteString(ErrPath(pathutil.Makepath(e.Path)))
 	b.WriteString(" is ambiguous\n")
 
 	b.WriteString("Possible completions:\n")

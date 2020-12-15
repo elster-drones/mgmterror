@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/danos/mgmterror"
 )
 
 type ExpMgmtErrors struct {
@@ -85,13 +87,13 @@ const (
 	wrongTypeFmtStr  = "'%s' is not %s"
 )
 
-func errpath(path []string) string {
-	if len(path) < 2 {
-		return fmt.Sprintf("%s", path)
-	}
-	path, val := path[:len(path)-1], path[len(path)-1]
-	return fmt.Sprintf("%s [%s]", strings.Join(path, " "), val)
-}
+//func errpath(path []string) string {
+//	if len(path) < 2 {
+//		return fmt.Sprintf("%s", path)
+//	}
+//	path, val := path[:len(path)-1], path[len(path)-1]
+//	return fmt.Sprintf("%s [%s]", strings.Join(path, " "), val)
+//}
 
 func getPathSlice(t *testing.T, path, desc string) []string {
 	if len(path) == 0 || path == "/" {
@@ -241,7 +243,7 @@ func genInvalidPathErrMsg(t *testing.T, data []string) string {
 		t.Fatalf("Invalid path error must have single data entry.\n")
 		return ""
 	}
-	path := errpath(strings.Split(data[0], " "))
+	path := mgmterror.ErrPath(strings.Split(data[0], " "))
 	return fmt.Sprintf("Configuration path: %s is not valid", path)
 }
 

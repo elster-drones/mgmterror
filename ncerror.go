@@ -1053,8 +1053,7 @@ type UnknownElementProtocolError struct {
 	*MgmtError
 }
 
-// Too many copies of this, also getPathSlice is similar to makepath
-func errpath(path []string) string {
+func ErrPath(path []string) string {
 	if len(path) < 2 {
 		return fmt.Sprintf("%s", path)
 	}
@@ -1064,7 +1063,7 @@ func errpath(path []string) string {
 
 func (uepe *UnknownElementProtocolError) GetMessage() string {
 	return fmt.Sprintf("%s is not valid",
-		errpath(pathutil.Makepath(uepe.Path+"/"+uepe.Info[0].Value)))
+		ErrPath(pathutil.Makepath(uepe.Path+"/"+uepe.Info[0].Value)))
 }
 
 func (e *UnknownElementProtocolError) UnmarshalJSON(value []byte) error {
@@ -1099,7 +1098,7 @@ type UnknownElementApplicationError struct {
 
 func (ueae *UnknownElementApplicationError) GetMessage() string {
 	return fmt.Sprintf("%s is not valid",
-		errpath(pathutil.Makepath(ueae.Path+"/"+ueae.Info[0].Value)))
+		ErrPath(pathutil.Makepath(ueae.Path+"/"+ueae.Info[0].Value)))
 }
 
 func (e *UnknownElementApplicationError) UnmarshalJSON(value []byte) error {
