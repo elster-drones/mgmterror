@@ -1,3 +1,10 @@
+golang-github-danos-mgmterror (1:1.7) unstable; urgency=medium
+
+  * Combine and export errpath functions to ErrPath
+  * Add InvalidPrefixError
+
+ -- William Ivory <william.ivory@intl.att.com>  Tue, 23 Feb 2021 13:46:05 +0000
+
 golang-github-danos-mgmterror (1:1.6) unstable; urgency=medium
 
   * Add support for properly checking InfoTags in ExpMgmtError
