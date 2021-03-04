@@ -251,7 +251,7 @@ func CheckMgmtErrors(
 		}
 		if !found {
 			t.Fatalf(
-				"Error not found:\n\tPath:\t%s\n\tMsgs:\t%v\nInfo:\t%s\n",
+				"Error not found:\n\tPath:\t%s\n\tMsgs:\t%v\nInfo:\t%v\n",
 				expErr.expPath, expErr.expMsgContents, expErr.expInfo)
 			return
 		}
