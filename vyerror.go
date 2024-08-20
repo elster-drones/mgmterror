@@ -177,7 +177,7 @@ func (e *PathAmbiguousError) GetMessage() string {
 	b.WriteString(ErrPath(pathutil.Makepath(e.Path)))
 	b.WriteString(" is ambiguous\n")
 
-	b.WriteString("Possible completions:\n")
+	b.WriteString("EZ9: Possible completions:\n")
 	pathMap := make(map[string]string, len(e.Info))
 	for _, elem := range e.Info {
 		pathMap[elem.XMLName.Local] = elem.Value
